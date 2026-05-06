@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cloud-Based Data Backup & Recovery System — Intelligent scheduling, multi-tier storage, SLA compliance">
+    <title>CloudBackupPro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+        {% if current_user.is_authenticated %}
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">CloudBackup<span>Pro</span></div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                <a href="{{ url_for('backups') }}" class="sidebar-link {% if request.endpoint == 'backups' %}active{% endif %}">
+                    <i class="fas fa-history"></i> Backup History
+                </a>
+                <a href="{{ url_for('restore') }}" class="sidebar-link {% if request.endpoint == 'restore' %}active{% endif %}">
+                    <i class="fas fa-undo-alt"></i> Restore
+                </a>
+                <a href="{{ url_for('monitoring') }}" class="sidebar-link {% if request.endpoint == 'monitoring' %}active{% endif %}">
+                    <i class="fas fa-chart-bar"></i> Monitoring
+                </a>
+                <a href="{{ url_for('reports') }}" class="sidebar-link {% if request.endpoint == 'reports' %}active{% endif %}">
+                    <i class="fas fa-file-alt"></i> Reports
+                </a>
+                <div class="sidebar-divider"></div>
+                <a href="{{ url_for('drill') }}" class="sidebar-link {% if request.endpoint == 'drill' %}active{% endif %}">
+                    <i class="fas fa-shield-alt"></i> DR Drill
+                </a>
+                <a href="{{ url_for('settings') }}" class="sidebar-link {% if request.endpoint == 'settings' %}active{% endif %}">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+            <div class="sidebar-divider"></div>
+            <a href="{{ url_for('logout') }}" class="sidebar-link" style="color:var(--accent-red)">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </aside>
+        {% endif %}
+
+        {% if current_user.is_authenticated %}
+        <main class="main-content">
+        {% else %}
+        <main style="margin-left:0;width:100%">
+        {% endif %}
+            {% if current_user.is_authenticated %}
+            <div class="topbar">
+                <div style="display:flex;align-items:center;gap:16px">
+                    <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                <div class="topbar-actions">
+                    <span style="font-size:0.85rem;color:var(--text-muted)"><i class="fas fa-user" style="margin-right:6px"></i>{{ current_user.username }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for msg in messages %}
+                        <div class="flash-msg">{{ msg }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

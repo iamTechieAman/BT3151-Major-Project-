@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+instance/
+staging/
+storage/
+restored_files/
+*.pyc
+.env
+.DS_Store

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card animate-in">
+        <div class="kpi-label">Total Backups</div>
+        <div class="kpi-value">{{ total_jobs }}</div>
+        <div class="kpi-sub">Completed jobs</div>
+        <i class="fas fa-cloud-upload-alt kpi-icon"></i>
+    </div>
+    <div class="kpi-card animate-in">
+        <div class="kpi-label">Files Protected</div>
+        <div class="kpi-value">{{ total_files }}</div>
+        <div class="kpi-sub">Encrypted & stored</div>
+        <i class="fas fa-file-shield kpi-icon"></i>
+    </div>
+    <div class="kpi-card animate-in">
+        <div class="kpi-label">Storage Used</div>
+        <div class="kpi-value">{{ total_size_mb }} <span style="font-size:0.9rem;font-weight:400">MB</span></div>
+        <div class="kpi-sub">Across all tiers</div>
+        <i class="fas fa-database kpi-icon"></i>
+    </div>
+    <div class="kpi-card animate-in">
+        <div class="kpi-label">Today's Cost</div>
+        <div class="kpi-value">${{ today_cost }}</div>
+        <div class="kpi-sub">Estimated daily</div>
+        <i class="fas fa-dollar-sign kpi-icon"></i>
+    </div>
+</div>
+
+<!-- Progress Bar (hidden by default, shown during backup) -->
+<div class="progress-section" id="progressSection" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-weight:600;font-size:0.9rem"><i class="fas fa-sync fa-spin" style="margin-right:8px;color:var(--accent-blue)"></i>Backup In Progress</span>
+        <span id="progressInfo" style="font-size:0.85rem;color:var(--text-secondary)">Initializing...</span>
+    </div>
+    <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-info">
+        <span id="progressFile" style="font-size:0.8rem;color:var(--text-muted)">—</span>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap">
+    <button onclick="runBackup()" id="backupBtn" class="btn btn-success"><i class="fas fa-play"></i> Run Backup</button>
+    <a href="{{ url_for('restore') }}" class="btn btn-outline"><i class="fas fa-undo-alt"></i> Restore Files</a>
+    <a href="{{ url_for('drill') }}" class="btn btn-outline"><i class="fas fa-shield-alt"></i> DR Drill</a>
+</div>
+
+<!-- Last Backup Info -->
+{% if last_backup %}
+<div class="glass" style="padding:16px 20px;margin-bottom:28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <i class="fas fa-check-circle" style="color:var(--accent-green);font-size:1.2rem"></i>
+    <div>
+        <span style="font-weight:600">Last Backup:</span>
+        <span style="color:var(--text-secondary)">{{ last_backup.type | capitalize }} — {{ last_backup.completed_at.strftime('%Y-%m-%d %H:%M:%S') if last_backup.completed_at else 'In Progress' }}</span>
+        <span style="color:var(--text-muted);font-size:0.85rem;margin-left:8px">{{ last_backup.files_count }} files ({{ (last_backup.size_bytes / 1024 / 1024) | round(2) }} MB) in {{ last_backup.duration_seconds | round(1) }}s</span>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts Grid -->
+{% if total_jobs > 0 %}
+<div class="chart-grid">
+    <div class="chart-panel">
+        <h3><i class="fas fa-chart-area"></i> Storage History</h3>
+        <div class="chart-container"><canvas id="storageChart" width="400" height="240"></canvas></div>
+    </div>
+    <div class="chart-panel">
+        <h3><i class="fas fa-tachometer-alt"></i> Backup Speed</h3>
+        <div class="chart-container"><canvas id="speedChart" width="400" height="240"></canvas></div>
+    </div>
+    <div class="chart-panel">
+        <h3><i class="fas fa-chart-pie"></i> Tier Usage</h3>
+        <div class="chart-container"><canvas id="tierChart" width="400" height="240"></canvas></div>
+    </div>
+    <div class="chart-panel">
+        <h3><i class="fas fa-chart-line"></i> Cost Trend</h3>
+        <div class="chart-container"><canvas id="costChart" width="400" height="240"></canvas></div>
+    </div>
+</div>
+{% else %}
+<div class="glass" style="padding:40px;text-align:center;margin-bottom:28px">
+    <i class="fas fa-chart-bar" style="font-size:2.5rem;color:var(--text-muted);margin-bottom:16px;display:block"></i>
+    <p style="font-size:1.1rem;font-weight:600;margin-bottom:8px">No Visualization Data Yet</p>
+    <p style="color:var(--text-muted);font-size:0.9rem">Run your first backup to generate charts, speed metrics, tier usage, and cost trends.</p>
+</div>
+{% endif %}
+
+<!-- SLA Compliance Gauges -->
+<div class="chart-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr))">
+    <div class="chart-panel">
+        <h3><i class="fas fa-heartbeat"></i> RPO Compliance</h3>
+        <div class="gauge-container" style="justify-content:center;padding:20px">
+            <div class="gauge-ring" id="rpoGauge" style="width:100px;height:100px">
+                <span class="gauge-value">—</span>
+            </div>
+            <div>
+                <div style="font-weight:600">Recovery Point</div>
+                <div style="font-size:0.8rem;color:var(--text-muted)">Target: {{ current_user.rpo_minutes }} min</div>
+            </div>
+        </div>
+    </div>
+    <div class="chart-panel">
+        <h3><i class="fas fa-trophy"></i> Success Rate</h3>
+        <div class="gauge-container" style="justify-content:center;padding:20px">
+            <div class="gauge-ring" id="rtoGauge" style="width:100px;height:100px">
+                <span class="gauge-value">—</span>
+            </div>
+            <div>
+                <div style="font-weight:600">Backup Reliability</div>
+                <div style="font-size:0.8rem;color:var(--text-muted)">Success / Total</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

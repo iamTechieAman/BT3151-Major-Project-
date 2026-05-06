@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block page_title %}Backup History{% endblock %}
+{% block content %}
+
+<div class="filter-bar">
+    <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;width:100%">
+        <select name="type" class="form-input" style="width:auto" onchange="this.form.submit()">
+            <option value="">All Types</option>
+            <option value="full" {% if request.args.get('type') == 'full' %}selected{% endif %}>Full</option>
+            <option value="incremental" {% if request.args.get('type') == 'incremental' %}selected{% endif %}>Incremental</option>
+        </select>
+        <select name="status" class="form-input" style="width:auto" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            <option value="success" {% if request.args.get('status') == 'success' %}selected{% endif %}>Success</option>
+            <option value="failed" {% if request.args.get('status') == 'failed' %}selected{% endif %}>Failed</option>
+            <option value="running" {% if request.args.get('status') == 'running' %}selected{% endif %}>Running</option>
+        </select>
+        <span style="flex:1"></span>
+        <span style="font-size:0.85rem;color:var(--text-muted)">{{ jobs.total }} total jobs</span>
+    </form>
+</div>
+
+<div class="glass" style="overflow:hidden;border-radius:var(--radius)">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Started</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Size</th>
+                <th>Files</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for job in jobs.items %}
+        <tr class="animate-in">
+            <td style="font-weight:600">#{{ job.id }}</td>
+            <td>
+                <span class="badge {% if job.type == 'full' %}badge-info{% else %}badge-warning{% endif %}">
+                    {{ job.type }}
+                </span>
+            </td>
+            <td>{{ job.started_at.strftime('%b %d, %H:%M') }}</td>
+            <td>{{ job.duration_seconds | round(1) if job.duration_seconds else '—' }}s</td>
+            <td>
+                <span class="badge {% if job.status == 'success' %}badge-success{% elif job.status == 'failed' %}badge-danger{% else %}badge-warning{% endif %}">
+                    <i class="fas {% if job.status == 'success' %}fa-check{% elif job.status == 'failed' %}fa-times{% else %}fa-spinner fa-spin{% endif %}" style="font-size:0.65rem"></i>
+                    {{ job.status }}
+                </span>
+            </td>
+            <td>{{ (job.size_bytes / 1024 / 1024) | round(2) }} MB</td>
+            <td>{{ job.files_count }}</td>
+            <td>
+                <button class="btn btn-sm btn-outline" data-job-id="{{ job.id }}" onclick="toggleJobExpand(this, Number(this.dataset.jobId))">
+                    <i class="fas fa-folder-open"></i>
+                </button>
+            </td>
+        </tr>
+        <tr id="expand-{{ job.id }}" style="display:none">
+            <td colspan="8" style="padding:0">
+                <div id="files-expand-{{ job.id }}" style="padding:16px;background:rgba(99,102,241,0.03)">
+                    <div style="color:var(--text-muted);font-size:0.85rem">Loading files...</div>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if jobs.pages > 1 %}
+<div class="pagination">
+    {% if jobs.has_prev %}
+        <a href="?page={{ jobs.prev_num }}&type={{ request.args.get('type','') }}&status={{ request.args.get('status','') }}">← Prev</a>
+    {% else %}
+        <span class="disabled">← Prev</span>
+    {% endif %}
+    
+    {% for p in range(1, jobs.pages + 1) %}
+        {% if p == jobs.page %}
+            <span class="active-page">{{ p }}</span>
+        {% else %}
+            <a href="?page={{ p }}&type={{ request.args.get('type','') }}&status={{ request.args.get('status','') }}">{{ p }}</a>
+        {% endif %}
+    {% endfor %}
+    
+    {% if jobs.has_next %}
+        <a href="?page={{ jobs.next_num }}&type={{ request.args.get('type','') }}&status={{ request.args.get('status','') }}">Next →</a>
+    {% else %}
+        <span class="disabled">Next →</span>
+    {% endif %}
+</div>
+{% endif %}
+
+<script>
+async function toggleJobExpand(btn, jobId) {
+    const row = document.getElementById('expand-' + jobId);
+    const container = document.getElementById('files-expand-' + jobId);
+    if (row.style.display === 'none') {
+        row.style.display = 'table-row';
+        try {
+            const res = await fetch('/api/v1/job/' + jobId + '/files');
+            const files = await res.json();
+            container.innerHTML = files.length ? files.map(f => `
+                <div style="display:flex;align-items:center;gap:12px;padding:6px 0;font-size:0.85rem;color:var(--text-secondary)">
+                    <i class="fas fa-file" style="color:var(--accent-blue);font-size:0.75rem"></i>
+                    <span style="flex:1">${f.path}</span>
+                    <span class="badge badge-${f.tier}">${f.tier}</span>
+                    <span style="color:var(--text-muted)">${f.size_kb} KB</span>
+                    <span class="audit-hash">${f.hash}</span>
+                </div>
+            `).join('') : '<p style="color:var(--text-muted)">No files in this job</p>';
+        } catch(e) { container.innerHTML = '<p style="color:var(--accent-red)">Error loading files</p>'; }
+    } else {
+        row.style.display = 'none';
+    }
+}
+</script>
+
+{% endblock %}

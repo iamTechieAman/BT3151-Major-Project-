@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block page_title %}Disaster Recovery Drill{% endblock %}
+{% block content %}
+
+<div style="max-width:700px">
+    <div class="glass" style="padding:32px">
+        <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:24px">
+            Disaster recovery drills simulate a total system failure and test the integrity of your backup data. 
+            The system selects a file from your backups, decrypts it, restores to a temporary directory, and measures 
+            RTO compliance — all in one click.
+        </p>
+
+        <!-- Drill Progress Steps -->
+        <div style="display:flex;gap:4px;margin-bottom:20px">
+            <div class="drill-step" data-step="1"></div>
+            <div class="drill-step" data-step="2"></div>
+            <div class="drill-step" data-step="3"></div>
+            <div class="drill-step" data-step="4"></div>
+            <div class="drill-step" data-step="5"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-muted);margin-bottom:24px">
+            <span>Init</span><span>Locate</span><span>Decrypt</span><span>Verify</span><span>Complete</span>
+        </div>
+
+        <!-- Status -->
+        <div id="drillStatus" style="display:none;margin-bottom:20px"></div>
+
+        <!-- Actions -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+            <button onclick="runDrill()" id="drillBtn" class="btn btn-danger" style="padding:14px 28px;font-size:1rem">
+                <i class="fas fa-shield-alt"></i> Execute Recovery Drill
+            </button>
+            <div style="text-align:right">
+                <div style="font-size:0.8rem;color:var(--text-muted)">RTO Timer</div>
+                <div id="drillTimer" style="font-size:1.5rem;font-weight:700;font-family:monospace;color:var(--accent-cyan)">0.0s</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass" style="padding:20px;margin-top:20px;border-left:3px solid rgba(99,102,241,0.3)">
+        <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.6">
+            <i class="fas fa-info-circle" style="margin-right:6px"></i>
+            Restoration during drills is performed to <code style="background:rgba(99,102,241,0.1);padding:2px 6px;border-radius:4px">storage/drill_restore/</code> 
+            and does not overwrite your current files. RTO target: {{ current_user.rto_minutes }} minutes.
+        </p>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero">
+    <h1><span class="gradient-text">Cloud-Based Data</span><br>Backup & Recovery</h1>
+    <p>Intelligent backup scheduling, multi-tier storage optimization, SLA compliance monitoring, and ML-powered predictions — all in one platform.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+        <a href="{{ url_for('login') }}" class="btn btn-primary" style="padding:14px 32px;font-size:1rem"><i class="fas fa-rocket"></i> Get Started</a>
+        <a href="{{ url_for('register') }}" class="btn btn-outline" style="padding:14px 32px;font-size:1rem"><i class="fas fa-user-plus"></i> Register</a>
+    </div>
+    <div class="hero-features">
+        <div class="hero-feature animate-in">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <h3>Smart Backups</h3>
+            <p>Auto full/incremental with AES-256 encryption</p>
+        </div>
+        <div class="hero-feature animate-in">
+            <i class="fas fa-layer-group"></i>
+            <h3>Multi-Tier Storage</h3>
+            <p>Hot, warm & cold tiers with automatic migration</p>
+        </div>
+        <div class="hero-feature animate-in">
+            <i class="fas fa-brain"></i>
+            <h3>ML Predictions</h3>
+            <p>Linear regression forecasts for optimal scheduling</p>
+        </div>
+        <div class="hero-feature animate-in">
+            <i class="fas fa-shield-alt"></i>
+            <h3>DR Drills</h3>
+            <p>One-click disaster recovery simulation</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

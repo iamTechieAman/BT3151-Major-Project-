@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:440px;margin:60px auto">
+    <div class="glass" style="padding:40px">
+        <h1 style="font-size:1.75rem;font-weight:800;text-align:center;margin-bottom:8px">Welcome Back</h1>
+        <p style="text-align:center;color:var(--text-muted);margin-bottom:32px;font-size:0.9rem">Sign in to your backup dashboard</p>
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" required class="form-input" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" required class="form-input" placeholder="Enter password">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px">
+                <i class="fas fa-sign-in-alt"></i> Access Dashboard
+            </button>
+        </form>
+        <p style="text-align:center;margin-top:24px;font-size:0.85rem;color:var(--text-muted)">
+            New here? <a href="{{ url_for('register') }}" style="color:var(--accent-blue);text-decoration:none">Create an account</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

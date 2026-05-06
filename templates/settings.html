@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block page_title %}Settings{% endblock %}
+{% block content %}
+
+<div style="max-width:700px">
+    <form method="post">
+        <!-- Backup Settings -->
+        <div class="glass" style="padding:28px;margin-bottom:20px">
+            <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:20px"><i class="fas fa-folder-open" style="color:var(--accent-blue);margin-right:8px"></i>Backup Source</h2>
+            <div class="form-group">
+                <label class="form-label">Source Folder (absolute path)</label>
+                <input type="text" name="backup_folder" value="{{ user.backup_folder }}" class="form-input" placeholder="/path/to/your/data">
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-top:6px">All files in this folder will be included in backups</p>
+            </div>
+        </div>
+
+        <!-- SLA Settings -->
+        <div class="glass" style="padding:28px;margin-bottom:20px">
+            <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:20px"><i class="fas fa-shield-alt" style="color:var(--accent-green);margin-right:8px"></i>SLA Configuration</h2>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="form-group">
+                    <label class="form-label">RPO (minutes)</label>
+                    <input type="number" name="rpo" value="{{ user.rpo_minutes }}" class="form-input" min="1">
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Max acceptable data loss window</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">RTO (minutes)</label>
+                    <input type="number" name="rto" value="{{ user.rto_minutes }}" class="form-input" min="1">
+                    <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">Max acceptable recovery time</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Settings -->
+        <div class="glass" style="padding:28px;margin-bottom:20px">
+            <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:20px"><i class="fas fa-clock" style="color:var(--accent-purple);margin-right:8px"></i>Schedule</h2>
+            <div class="form-group">
+                <label class="form-label">Backup Schedule</label>
+                <select name="schedule_type" class="form-input" id="scheduleType" onchange="toggleCron()">
+                    <option value="hourly" {% if user.schedule_type == 'hourly' %}selected{% endif %}>Every Hour</option>
+                    <option value="daily" {% if user.schedule_type == 'daily' %}selected{% endif %}>Daily</option>
+                    <option value="custom" {% if user.schedule_type == 'custom' %}selected{% endif %}>Custom (Cron)</option>
+                </select>
+            </div>
+            {% if user.schedule_type == 'custom' %}
+            <div class="form-group" id="cronGroup" style="display:block">
+            {% else %}
+            <div class="form-group" id="cronGroup" style="display:none">
+            {% endif %}
+                <label class="form-label">Cron Expression</label>
+                <input type="text" name="schedule_cron" value="{{ user.schedule_cron }}" class="form-input" placeholder="*/15 * * * *">
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">e.g. "*/15 * * * *" = every 15 minutes</p>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Settings</button>
+            <button type="button" onclick="runBackupNow()" class="btn btn-success"><i class="fas fa-play"></i> Run Backup Now</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleCron() {
+    document.getElementById('cronGroup').style.display = document.getElementById('scheduleType').value === 'custom' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

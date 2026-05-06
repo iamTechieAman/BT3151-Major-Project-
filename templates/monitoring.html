@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block page_title %}Monitoring{% endblock %}
+{% block content %}
+
+<div class="chart-grid">
+    <!-- Blockchain Audit Trail -->
+    <div class="glass" style="padding:24px">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+            <i class="fas fa-link" style="color:var(--accent-blue)"></i> Blockchain Audit Trail
+            <span style="font-size:0.7rem;color:var(--text-muted);margin-left:auto">Auto-refresh 5s</span>
+        </h3>
+        <div id="auditLog" style="max-height:420px;overflow-y:auto">
+            <p style="color:var(--text-muted);text-align:center;padding:40px">Loading audit chain...</p>
+        </div>
+    </div>
+
+    <!-- ML Insights -->
+    <div class="glass" style="padding:24px">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+            <i class="fas fa-brain" style="color:var(--accent-purple)"></i> ML Insights
+        </h3>
+        <div style="padding:16px;border-radius:var(--radius-sm);background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.12);margin-bottom:20px">
+            <div style="font-weight:600;font-size:0.85rem;color:var(--accent-blue);margin-bottom:8px">
+                <i class="fas fa-chart-line" style="margin-right:6px"></i>Predictive Analysis
+            </div>
+            <p id="mlPrediction" style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6">Analyzing backup patterns...</p>
+        </div>
+        <div id="changeRate"></div>
+    </div>
+</div>
+
+<!-- System Health -->
+<div class="glass" style="padding:24px;margin-top:20px">
+    <h3 style="font-size:1rem;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+        <i class="fas fa-heartbeat" style="color:var(--accent-green)"></i> System Health
+    </h3>
+    <div id="healthStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px">
+        <p style="color:var(--text-muted)">Loading health metrics...</p>
+    </div>
+</div>
+
+<script>
+async function loadHealth() {
+    try {
+        const res = await fetch('/api/system/health');
+        const h = res.ok ? await res.json() : null;
+        if (!h) return;
+        document.getElementById('healthStats').innerHTML = `
+            <div class="kpi-card" style="padding:16px">
+                <div class="kpi-label">Success Rate</div>
+                <div style="font-size:1.3rem;font-weight:700;color:${h.success_rate > 80 ? 'var(--accent-green)' : 'var(--accent-red)'}">${h.success_rate}%</div>
+            </div>
+            <div class="kpi-card" style="padding:16px">
+                <div class="kpi-label">Last Backup</div>
+                <div style="font-size:1.3rem;font-weight:700">${Math.round(h.last_backup_minutes_ago)}m ago</div>
+            </div>
+            <div class="kpi-card" style="padding:16px">
+                <div class="kpi-label">Total Storage</div>
+                <div style="font-size:1.3rem;font-weight:700">${h.total_storage_mb} MB</div>
+            </div>
+            <div class="kpi-card" style="padding:16px">
+                <div class="kpi-label">RPO Status</div>
+                <div style="font-size:1.3rem;font-weight:700;color:${h.rpo_compliant ? 'var(--accent-green)' : 'var(--accent-red)'}">
+                    ${h.rpo_compliant ? '✓ Compliant' : '✗ Violation'}
+                </div>
+            </div>
+            <div class="kpi-card" style="padding:16px">
+                <div class="kpi-label">Hot Tier</div>
+                <div style="font-size:1.3rem;font-weight:700">${h.tier_stats.hot.count} files</div>
+                <div style="font-size:0.75rem;color:var(--text-muted)">${h.tier_stats.hot.size_mb} MB</div>
+            </div>
+            <div class="kpi-card" style="padding:16px">
+                <div class="kpi-label">Warm Tier</div>
+                <div style="font-size:1.3rem;font-weight:700">${h.tier_stats.warm.count} files</div>
+                <div style="font-size:0.75rem;color:var(--text-muted)">${h.tier_stats.warm.size_mb} MB</div>
+            </div>
+        `;
+    } catch(e) {}
+}
+loadHealth();
+setInterval(loadHealth, 10000);
+</script>
+
+{% endblock %}
